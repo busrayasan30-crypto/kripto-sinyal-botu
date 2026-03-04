@@ -67,13 +67,13 @@ if df is not None:
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
     
-# Grafik Ayarları (Hata vermeyen en temel versiyon)
+# Grafik Ayarları (Tüm hata riskleri kaldırıldı)
     fig.update_layout(
         height=600,
         xaxis_rangeslider_visible=False
     )
 
-    # İşlem Seviyelerini Çizgi Olarak Ekle
+    # İşlem Seviyelerini Grafiğe İşle
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green")
     fig.add_hline(y=last_price, line_dash="dot", line_color="blue")
@@ -81,4 +81,4 @@ if df is not None:
     # Grafiği Ekrana Bas
     st.plotly_chart(fig, use_container_width=True)
     
-    st.info(f"💡 İşlem Notu: Mavi (Giriş), Kırmızı (Stop), Yeşil (Hedef) seviyeleridir.")
+    st.info(f"📊 Grafik Rehberi: Mavi (Giriş), Kırmızı (Stop), Yeşil (Hedef) seviyeleridir.")
