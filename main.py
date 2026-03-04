@@ -4,8 +4,8 @@ import pandas as pd
 import pandas_ta as ta
 import plotly.graph_objects as go
 
-st.set_page_config(page_title="Pro Kripto Sinyal Analiz", layout="wide")
-st.title("🛡️ Alpha Pro: Çoklu Gösterge & Seviye Analizi")
+st.set_page_config(page_title="Alpha Pro: İşlem Asistanı", layout="wide")
+st.title("🎯 Alpha Pro: Giriş - Çıkış & Risk Yönetimi")
 
 def get_data(symbol='BTC/USDT'):
     try:
@@ -22,63 +22,52 @@ coin = st.sidebar.selectbox("Coin", ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
 df = get_data(coin)
 
 if df is not None:
-    # 1. RSI
+    # --- İNDİKATÖRLER ---
     df['RSI'] = ta.rsi(df['close'], length=14)
-    # 2. MACD
-    macd = ta.macd(df['close'])
-    df = pd.concat([df, macd], axis=1)
-    # 3. Hareketli Ortalamalar (SMA 20 & 50)
     df['SMA20'] = ta.sma(df['close'], length=20)
     df['SMA50'] = ta.sma(df['close'], length=50)
-    # 4. Bollinger Bantları
-    bbands = ta.bbands(df['close'], length=20)
-    df = pd.concat([df, bbands], axis=1)
+    df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=14)
     
-    # 5. Destek ve Direnç Hesaplama (Son 100 Mum)
-    support = df['low'].tail(100).min()
-    resistance = df['high'].tail(100).max()
-
     last_price = df['close'].iloc[-1]
+    last_atr = df['ATR'].iloc[-1]
     last_rsi = df['RSI'].iloc[-1]
     
+    # --- RİSK YÖNETİMİ HESABI (ATR TABANLI) ---
+    # Alış için: Stop = Fiyat - (1.5 * ATR), Kar = Fiyat + (3 * ATR) -> 1:2 Oranı
+    stop_loss = last_price - (last_atr * 1.5)
+    take_profit = last_price + (last_atr * 3)
+    
     # --- PANEL TASARIMI ---
-    col1, col2, col3 = st.columns(3)
-    col1.metric("Anlık Fiyat", f"{last_price} $")
-    col2.metric("Destek Seviyesi", f"{support} $")
-    col3.metric("Direnç Seviyesi", f"{resistance} $")
+    st.subheader("📊 Canlı İşlem Stratejisi")
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Giriş (Buy)", f"{last_price:,} $")
+    c2.metric("Stop-Loss (SL)", f"{round(stop_loss, 2)} $", delta="-Risk", delta_color="inverse")
+    c3.metric("Take-Profit (TP)", f"{round(take_profit, 2)} $", delta="+Hedef")
+    c4.metric("R/R Oranı", "1 : 2")
 
-    # --- GELİŞMİŞ SİNYAL MANTIĞI ---
+    # --- SİNYAL PUANLAMA ---
     score = 0
-    if last_rsi < 40: score += 1  # RSI Alış yönlü
-    if last_price > df['SMA20'].iloc[-1]: score += 1 # Trend Üstü
-    if df['MACD_12_26_9'].iloc[-1] > df['MACDs_12_26_9'].iloc[-1]: score += 1 # MACD Kesişimi
-    if last_price < support * 1.02: score += 1 # Desteğe Yakın
+    if last_rsi < 45: score += 1
+    if last_price > df['SMA20'].iloc[-1]: score += 1
+    if last_price > df['SMA50'].iloc[-1]: score += 1
+    if df['close'].iloc[-1] > df['close'].iloc[-2]: score += 1
 
-    st.subheader("📊 Strateji Analiz Raporu")
     if score >= 3:
-        st.success(f"🚀 GÜÇLÜ AL SİNYALİ (Puan: {score}/4) - Trend ve Göstergeler Pozitif!")
+        st.success(f"✅ İŞLEME GİRİLEBİLİR (Puan: {score}/4) - Yön Yukarı!")
     elif score <= 1:
-        st.error(f"⚠️ DİKKAT: SATIŞ BASKISI (Puan: {score}/4) - Göstergeler Zayıf!")
+        st.error(f"❌ İŞLEMDEN KAÇIN (Puan: {score}/4) - Satış Baskısı!")
     else:
-        st.info(f"⚖️ NÖTR / BEKLE (Puan: {score}/4) - Net Bir Trend Oluşmadı.")
+        st.info(f"⚖️ BEKLEMEDE KAL (Puan: {score}/4) - Kararsız Piyasa.")
 
-    # --- PROFESYONEL GRAFİK ---
+    # --- GRAFİK ---
     fig = go.Figure()
-    # Mumlar
     fig.add_trace(go.Candlestick(x=df['ts'], open=df['open'], high=df['high'], low=df['low'], close=df['close'], name="Fiyat"))
-    # Ortalamalar
-    fig.add_trace(go.Scatter(x=df['ts'], y=df['SMA20'], line=dict(color='orange', width=1), name="SMA 20"))
-    fig.add_trace(go.Scatter(x=df['ts'], y=df['SMA50'], line=dict(color='blue', width=1), name="SMA 50"))
-    # Destek/Direnç Çizgileri
-    fig.add_hline(y=support, line_dash="dash", line_color="green", annotation_text="Güçlü Destek")
-    fig.add_hline(y=resistance, line_dash="dash", line_color="red", annotation_text="Güçlü Direnç")
-
-# Grafik Ayarlarını En Basit Haline Getir
-    fig.update_layout(
-        height=600,
-        xaxis_rangeslider_visible=False
-    )
-
-    # Grafiği Sayfada Göster
+    
+    # SL ve TP Çizgileri
+    fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
+    fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
+    
+    fig.update_layout(template="dark", xaxis_rangeslider_visible=False, height=600)
     st.plotly_chart(fig, use_container_width=True)
     
+    st.caption(f"Not: Stop seviyesi son 14 saatlik ATR oynaklığına ({round(last_atr, 2)}) göre hesaplanmıştır.")
