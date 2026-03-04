@@ -67,7 +67,16 @@ if df is not None:
     seviyeler = {
         "Açıklama": ["Anlık Fiyat", "Güvenli Stop Seviyesi", "Hedef Fiyat (1:2 R/R)", "Piyasa Oynaklığı (ATR)"],
         "Değer ($)": [f"{last_price:,}", f"{round(stop_loss, 2):,}", f"{round(take_profit, 2):,}", f"{round(last_atr, 2)}"]
-    }
-    st.table(pd.DataFrame(seviyeler))
+# Plotly hatasından kaçınmak için Streamlit'in yerleşik grafik motorunu kullanıyoruz
+    st.subheader("📈 Trend Analizi (Fiyat & Ortalamalar)")
+    chart_data = df.set_index('ts')[['close', 'SMA20', 'SMA50']]
+    st.line_chart(chart_data)
 
-    st.write("🔄 *Not: Sayfa her yenilendiğinde veriler güncellenir.*")
+    # İşlem Seviyelerini Net Bir Tablo Olarak Gösterelim
+    st.info("🎯 **Kritik İşlem Seviyeleri Özet**")
+    st.table(pd.DataFrame({
+        "İşlem Adımı": ["Giriş (Buy)", "Zarar Kes (Stop)", "Kâr Al (Target)"],
+        "Fiyat Seviyesi ($)": [f"{last_price:,}", f"{round(stop_loss, 2):,}", f"{round(take_profit, 2):,}"]
+    }))
+    
+    st.write(f"💡 *Not: Stop seviyesi mevcut piyasa oynaklığına (ATR: {round(last_atr, 2)}) göre hesaplanmıştır.*")
