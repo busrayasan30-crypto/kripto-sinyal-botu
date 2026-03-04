@@ -67,22 +67,19 @@ if df is not None:
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
     
-# Grafik Ayarları (En Güvenli ve Sade Versiyon)
+# Grafik Ayarları (Hata Veren Tüm Süslemeler Kaldırıldı)
     fig.update_layout(
         height=600,
         xaxis_rangeslider_visible=False,
-        showlegend=True
+        margin=dict(l=0, r=0, t=30, b=0)
     )
 
-    # İşlem Seviyelerini Grafiğe Ekle
-    fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", 
-                 annotation_text=f"STOP: {round(stop_loss, 1)}", annotation_position="bottom left")
-    fig.add_hline(y=take_profit, line_dash="dash", line_color="green", 
-                 annotation_text=f"HEDEF: {round(take_profit, 1)}", annotation_position="top left")
-    fig.add_hline(y=last_price, line_dash="dot", line_color="blue", 
-                 annotation_text="GİRİŞ", annotation_position="right")
+    # İşlem Seviyelerini Çizgilere Yazı Olarak Ekle
+    fig.add_hline(y=stop_loss, line_dash="dash", line_color="red")
+    fig.add_hline(y=take_profit, line_dash="dash", line_color="green")
+    fig.add_hline(y=last_price, line_dash="dot", line_color="blue")
 
     # Grafiği Ekrana Bas
     st.plotly_chart(fig, use_container_width=True)
     
-    st.info(f"💡 Strateji Notu: Şu anki piyasa oynaklığına (ATR) göre risk mesafeniz {round(last_atr * 1.5, 2)} $ olarak hesaplanmıştır.")
+    st.info(f"💡 ATR Bilgisi: Mevcut oynaklık {round(last_atr, 2)} birim. Stop seviyeniz güvenli bölgede.")
