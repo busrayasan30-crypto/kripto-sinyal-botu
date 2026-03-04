@@ -73,5 +73,16 @@ if df is not None:
     fig.add_hline(y=support, line_dash="dash", line_color="green", annotation_text="Güçlü Destek")
     fig.add_hline(y=resistance, line_dash="dash", line_color="red", annotation_text="Güçlü Direnç")
 
-    fig.update_layout(template="dark", xaxis_rangeslider_visible=False, height=700)
+   # Grafik Ayarlarını Güncelle (Hatasız Versiyon)
+    fig.update_layout(
+        template="dark",
+        xaxis_rangeslider_visible=False,
+        height=700,
+        margin=dict(l=10, r=10, t=10, b=10)
+    )
+    # Izgara çizgilerini kapatarak daha sade bir görünüm sağlıyoruz
+    fig.update_xaxes(showgrid=False)
+    fig.update_yaxes(showgrid=False)
+
     st.plotly_chart(fig, use_container_width=True)
+    
