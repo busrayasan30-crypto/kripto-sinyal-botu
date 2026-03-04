@@ -11,7 +11,7 @@ st.title("🚀 Alpha Kripto Sinyal Merkezi")
 # Veri Çekme Fonksiyonu
 def get_data(symbol='BTC/USDT'):
     try:
-        exchange = ccxt.binance()
+        exchange = ccxt.kraken()
         bars = exchange.fetch_ohlcv(symbol, timeframe='1h', limit=100)
         df = pd.DataFrame(bars, columns=['ts', 'open', 'high', 'low', 'close', 'vol'])
         df['ts'] = pd.to_datetime(df['ts'], unit='ms')
