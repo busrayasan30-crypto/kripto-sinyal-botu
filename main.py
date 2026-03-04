@@ -67,14 +67,13 @@ if df is not None:
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
     
-# Grafik Ayarları (Hata Veren Tüm Süslemeler Kaldırıldı)
+# Grafik Ayarları (Tüm sorunlu ayarlar kaldırıldı)
     fig.update_layout(
         height=600,
-        xaxis_rangeslider_visible=False,
-        margin=dict(l=0, r=0, t=30, b=0)
+        xaxis_rangeslider_visible=False
     )
 
-    # İşlem Seviyelerini Çizgilere Yazı Olarak Ekle
+    # İşlem Seviyelerini Çizgi Olarak Ekle
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green")
     fig.add_hline(y=last_price, line_dash="dot", line_color="blue")
@@ -82,4 +81,4 @@ if df is not None:
     # Grafiği Ekrana Bas
     st.plotly_chart(fig, use_container_width=True)
     
-    st.info(f"💡 ATR Bilgisi: Mevcut oynaklık {round(last_atr, 2)} birim. Stop seviyeniz güvenli bölgede.")
+    st.info(f"💡 ATR Analizi: Oynaklık seviyesi {round(last_atr, 2)}. Stop ve Kar hedefleri grafiğe yansıtıldı.")
