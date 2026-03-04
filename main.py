@@ -38,13 +38,22 @@ if df is not None:
     else:
         st.info("⚖️ NÖTR")
 
-    fig = go.Figure(data=[go.Candlestick(x=df['ts'], open=df['open'], high=df['high'], low=df['low'], close=df['close'])])    fig.update_layout(template="dark", xaxis_rangeslider_visible=False)
-    st.plotly_chart(fig, use_container_width=True)
-# Grafik ayarlarını güncelle ve hatayı gider
+    # Grafik Nesnesini Oluştur
+    fig = go.Figure(data=[go.Candlestick(
+        x=df['ts'],
+        open=df['open'],
+        high=df['high'],
+        low=df['low'],
+        close=df['close']
+    )])
+
+    # Grafik Ayarlarını Yap (Hatasız Versiyon)
     fig.update_layout(
         template="dark",
         xaxis_rangeslider_visible=False,
         height=600,
         margin=dict(l=10, r=10, t=10, b=10)
     )
+
+    # Grafiği Ekrana Bas
     st.plotly_chart(fig, use_container_width=True)
