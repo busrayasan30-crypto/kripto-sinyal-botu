@@ -67,18 +67,14 @@ if df is not None:
     fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
     fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
     
-# Grafik Ayarları (Tüm hata riskleri kaldırıldı)
-    fig.update_layout(
-        height=600,
-        xaxis_rangeslider_visible=False
-    )
+# Plotly yerine Streamlit'in doğrudan grafik motorunu kullanıyoruz (Hata vermez)
+    st.line_chart(df.set_index('ts')[['close', 'SMA20', 'SMA50']])
 
-    # İşlem Seviyelerini Grafiğe İşle
-    fig.add_hline(y=stop_loss, line_dash="dash", line_color="red")
-    fig.add_hline(y=take_profit, line_dash="dash", line_color="green")
-    fig.add_hline(y=last_price, line_dash="dot", line_color="blue")
-
-    # Grafiği Ekrana Bas
-    st.plotly_chart(fig, use_container_width=True)
+    # İşlem Seviyelerini Net Bir Tablo Olarak Gösterelim
+    st.info("🎯 **Kritik İşlem Seviyeleri Özet**")
+    st.table(pd.DataFrame({
+        "Seviye Tipi": ["Giriş (Buy)", "Zarar Kes (Stop)", "Kâr Al (Target)"],
+        "Fiyat ($)": [f"{last_price:,}", f"{round(stop_loss, 2):,}", f"{round(take_profit, 2):,}"]
+    }))
     
-    st.info(f"📊 Grafik Rehberi: Mavi (Giriş), Kırmızı (Stop), Yeşil (Hedef) seviyeleridir.")
+    st.write(f"💡 *Not: Stop seviyesi mevcut ATR ({round(last_atr, 2)}) değerine göre hesaplanmıştır.*")
