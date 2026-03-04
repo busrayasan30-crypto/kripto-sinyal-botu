@@ -2,11 +2,12 @@ import streamlit as st
 import ccxt
 import pandas as pd
 import pandas_ta as ta
-import plotly.graph_objects as go
 
-st.set_page_config(page_title="Alpha Pro: İşlem Asistanı", layout="wide")
-st.title("🎯 Alpha Pro: Giriş - Çıkış & Risk Yönetimi")
+# Sayfa Ayarları
+st.set_page_config(page_title="Alpha Pro: Kesin Çözüm", layout="wide")
+st.title("🎯 Alpha Pro: Profesyonel İşlem Terminali")
 
+# Veri Çekme Fonksiyonu
 def get_data(symbol='BTC/USDT'):
     try:
         exchange = ccxt.kraken()
@@ -14,67 +15,59 @@ def get_data(symbol='BTC/USDT'):
         df = pd.DataFrame(bars, columns=['ts', 'open', 'high', 'low', 'close', 'vol'])
         df['ts'] = pd.to_datetime(df['ts'], unit='ms')
         return df
-    except Exception as e:
-        st.error(f"Veri hatası: {e}")
+    except:
         return None
 
-coin = st.sidebar.selectbox("Coin", ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
+# Sidebar
+coin = st.sidebar.selectbox("Coin Seçin", ["BTC/USDT", "ETH/USDT", "SOL/USDT"])
 df = get_data(coin)
 
 if df is not None:
-    # --- İNDİKATÖRLER ---
-    df['RSI'] = ta.rsi(df['close'], length=14)
+    # --- TEKNİK ANALİZ ---
     df['SMA20'] = ta.sma(df['close'], length=20)
     df['SMA50'] = ta.sma(df['close'], length=50)
+    df['RSI'] = ta.rsi(df['close'], length=14)
     df['ATR'] = ta.atr(df['high'], df['low'], df['close'], length=14)
     
     last_price = df['close'].iloc[-1]
     last_atr = df['ATR'].iloc[-1]
-    last_rsi = df['RSI'].iloc[-1]
     
-    # --- RİSK YÖNETİMİ HESABI (ATR TABANLI) ---
-    # Alış için: Stop = Fiyat - (1.5 * ATR), Kar = Fiyat + (3 * ATR) -> 1:2 Oranı
+    # --- RİSK YÖNETİMİ HESABI ---
     stop_loss = last_price - (last_atr * 1.5)
     take_profit = last_price + (last_atr * 3)
     
-    # --- PANEL TASARIMI ---
-    st.subheader("📊 Canlı İşlem Stratejisi")
-    c1, c2, c3, c4 = st.columns(4)
-    c1.metric("Giriş (Buy)", f"{last_price:,} $")
-    c2.metric("Stop-Loss (SL)", f"{round(stop_loss, 2)} $", delta="-Risk", delta_color="inverse")
-    c3.metric("Take-Profit (TP)", f"{round(take_profit, 2)} $", delta="+Hedef")
-    c4.metric("R/R Oranı", "1 : 2")
+    # --- ÖZET PANELİ ---
+    c1, c2, c3 = st.columns(3)
+    c1.metric("Giriş (Anlık)", f"{last_price:,} $")
+    c2.metric("Zarar Kes (SL)", f"{round(stop_loss, 2):,} $", delta_color="inverse")
+    c3.metric("Kâr Al (TP)", f"{round(take_profit, 2):,}")
 
-    # --- SİNYAL PUANLAMA ---
+    # --- SİNYAL DURUMU ---
     score = 0
-    if last_rsi < 45: score += 1
+    if df['RSI'].iloc[-1] < 50: score += 1
     if last_price > df['SMA20'].iloc[-1]: score += 1
     if last_price > df['SMA50'].iloc[-1]: score += 1
     if df['close'].iloc[-1] > df['close'].iloc[-2]: score += 1
 
     if score >= 3:
-        st.success(f"✅ İŞLEME GİRİLEBİLİR (Puan: {score}/4) - Yön Yukarı!")
+        st.success(f"✅ GÜÇLÜ AL SİNYALİ (Puan: {score}/4)")
     elif score <= 1:
-        st.error(f"❌ İŞLEMDEN KAÇIN (Puan: {score}/4) - Satış Baskısı!")
+        st.error(f"❌ DİKKAT: SATIŞ BASKISI (Puan: {score}/4)")
     else:
-        st.info(f"⚖️ BEKLEMEDE KAL (Puan: {score}/4) - Kararsız Piyasa.")
+        st.info(f"⚖️ NÖTR: BEKLEMEDE KAL (Puan: {score}/4)")
 
-    # --- GRAFİK ---
-    fig = go.Figure()
-    fig.add_trace(go.Candlestick(x=df['ts'], open=df['open'], high=df['high'], low=df['low'], close=df['close'], name="Fiyat"))
-    
-    # SL ve TP Çizgileri
-    fig.add_hline(y=stop_loss, line_dash="dash", line_color="red", annotation_text="STOP (Zarar Kes)")
-    fig.add_hline(y=take_profit, line_dash="dash", line_color="green", annotation_text="HEDEF (Kâr Al)")
-    
-# Plotly yerine Streamlit'in doğrudan grafik motorunu kullanıyoruz (Hata vermez)
-    st.line_chart(df.set_index('ts')[['close', 'SMA20', 'SMA50']])
+    # --- HATA VERMEYEN YENİ GRAFİK SİSTEMİ ---
+    st.subheader("📈 Trend ve Hareketli Ortalamalar")
+    # Sadece fiyat ve ortalamaları içeren sade bir veri seti
+    chart_data = df.set_index('ts')[['close', 'SMA20', 'SMA50']]
+    st.line_chart(chart_data)
 
-    # İşlem Seviyelerini Net Bir Tablo Olarak Gösterelim
-    st.info("🎯 **Kritik İşlem Seviyeleri Özet**")
-    st.table(pd.DataFrame({
-        "Seviye Tipi": ["Giriş (Buy)", "Zarar Kes (Stop)", "Kâr Al (Target)"],
-        "Fiyat ($)": [f"{last_price:,}", f"{round(stop_loss, 2):,}", f"{round(take_profit, 2):,}"]
-    }))
-    
-    st.write(f"💡 *Not: Stop seviyesi mevcut ATR ({round(last_atr, 2)}) değerine göre hesaplanmıştır.*")
+    # --- SEVİYE TABLOSU ---
+    st.subheader("📋 İşlem Detayları")
+    seviyeler = {
+        "Açıklama": ["Anlık Fiyat", "Güvenli Stop Seviyesi", "Hedef Fiyat (1:2 R/R)", "Piyasa Oynaklığı (ATR)"],
+        "Değer ($)": [f"{last_price:,}", f"{round(stop_loss, 2):,}", f"{round(take_profit, 2):,}", f"{round(last_atr, 2)}"]
+    }
+    st.table(pd.DataFrame(seviyeler))
+
+    st.write("🔄 *Not: Sayfa her yenilendiğinde veriler güncellenir.*")
